@@ -1,0 +1,7 @@
+echo ".vscode/
+.idea/
+AppData/
+*.jtx
+node_modules/
+.DS_Store
+Thumbs.db"
