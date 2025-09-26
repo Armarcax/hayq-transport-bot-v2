@@ -33,8 +33,11 @@ function handleRouteSelection(bot, callbackQuery, userLat, userLon) {
 
   const routesPath = path.join(__dirname, '..', '..', 'backend', 'data', 'routes_small_full_with_eta.json');
   let routes;
-  try { routes = JSON.parse(fs.readFileSync(routesPath, 'utf8')); }
-  catch (err) { return bot.sendMessage(chatId, 'Սխալ՝ չկարողացա կարդալ տվյալների ֆայլը 😢'); }
+  try {
+    routes = JSON.parse(fs.readFileSync(routesPath, 'utf8'));
+  } catch (err) {
+    return bot.sendMessage(chatId, 'Սխալ՝ չկարողացա կարդալ տվյալների ֆայլը 😢');
+  }
 
   bot.sendMessage(chatId, 'Մուտքագրեք կանգառի անունը, ավտոբուսի թիվը կամ պարզապես ուղարկեք Ձեր լոկացիան:', { reply_markup: { force_reply: true } })
     .then(sent => {
@@ -43,12 +46,11 @@ function handleRouteSelection(bot, callbackQuery, userLat, userLon) {
         let foundRoutes = [];
 
         if (reply.location) {
-          // Եթե լոկացիա է ուղարկվել, գտնում ենք մոտակա երթուղիները
           const userLat = reply.location.latitude;
           const userLon = reply.location.longitude;
           foundRoutes = routes.filter(r =>
             r.stops?.some(s => s.coords?.lat != null && s.coords?.lng != null &&
-              Math.sqrt((s.coords.lat - userLat) ** 2 + (s.coords.lng - userLon) ** 2) <= 0.01 // մոտավոր 1կմ շառավղ
+              Math.sqrt((s.coords.lat - userLat) ** 2 + (s.coords.lng - userLon) ** 2) <= 0.01
             )
           );
           if (!foundRoutes.length) {
@@ -61,10 +63,17 @@ function handleRouteSelection(bot, callbackQuery, userLat, userLon) {
           });
         } else {
           const input = reply.text.trim().toLowerCase();
+
+          // Եթե մուտքագրել են թիվ – գտնում ենք համապատասխան երթուղիները
           if (/^\d+$/.test(input)) {
             foundRoutes = routes.filter(r => `${r.number}` === input);
           } else {
-            foundRoutes = routes.filter(r => r.stops?.some(s => s.name?.hy?.toLowerCase().includes(input)));
+            // Հաշվի առնում ենք կանգառների անունը և երթուղու սկզբն/վերջանունները
+            foundRoutes = routes.filter(r =>
+              (r.start?.hy?.toLowerCase().includes(input)) ||
+              (r.end?.hy?.toLowerCase().includes(input)) ||
+              r.stops?.some(s => s.name?.hy?.toLowerCase().includes(input))
+            );
           }
 
           if (!foundRoutes.length) {
@@ -89,11 +98,16 @@ function handleRouteSelection(bot, callbackQuery, userLat, userLon) {
         // pagination callback
         const pageHandler = cq => {
           const data = cq.data;
-          if (!data.startsWith('show_route_') && !data.startsWith('next_') && !data.startsWith('prev_') && data !== 'back_routes') return;
+          if (!data.startsWith('show_route_') &&
+              !data.startsWith('next_') &&
+              !data.startsWith('prev_') &&
+              data !== 'back_routes') return;
 
           let routeNumber, page;
-          if (data.startsWith('show_route_')) { routeNumber = data.replace('show_route_', ''); page = 0; }
-          else if (data.startsWith('next_') || data.startsWith('prev_')) {
+          if (data.startsWith('show_route_')) {
+            routeNumber = data.replace('show_route_', '');
+            page = 0;
+          } else if (data.startsWith('next_') || data.startsWith('prev_')) {
             const parts = data.split('_');
             routeNumber = parts[1];
             page = parseInt(parts[2], 10);
@@ -108,16 +122,23 @@ function handleRouteSelection(bot, callbackQuery, userLat, userLon) {
 
           let msg = `🚍 Գիծ ${route.number}: ${route.start.hy ?? 'Անհայտ'} → ${route.end.hy ?? 'Անհայտ'}\nԿանգառներ (մաս ${page + 1}):\n`;
           stopsPage.forEach((s, i) => {
-            const eta = (userLat && userLon) ? estimateETA(userLat, userLon, s) : (s?.eta_min || 1);
+            const eta = (userLat && userLon)
+              ? estimateETA(userLat, userLon, s)
+              : (s?.eta_min || 1);
             msg += `${start + i + 1}. ${s.name?.hy ?? 'Անհայտ կանգառ'} ⏱ մոտավորապես 🔴 <b>${eta} րոպե</b>\n`;
           });
 
           const buttons = [];
-          if (start + pageSize < route.stops.length) buttons.push({ text: 'Հաջորդ', callback_data: `next_${route.number}_${page + 1}` });
-          if (page > 0) buttons.push({ text: 'Նախորդ', callback_data: `prev_${route.number}_${page - 1}` });
+          if (start + pageSize < route.stops.length)
+            buttons.push({ text: 'Հաջորդ', callback_data: `next_${route.number}_${page + 1}` });
+          if (page > 0)
+            buttons.push({ text: 'Նախորդ', callback_data: `prev_${route.number}_${page - 1}` });
           buttons.push({ text: 'Հետ', callback_data: 'back_routes' });
 
-          bot.sendMessage(cq.message.chat.id, msg.trim(), { reply_markup: { inline_keyboard: [buttons] }, parse_mode: 'HTML' });
+          bot.sendMessage(cq.message.chat.id, msg.trim(), {
+            reply_markup: { inline_keyboard: [buttons] },
+            parse_mode: 'HTML'
+          });
           bot.answerCallbackQuery(cq.id);
         };
 
