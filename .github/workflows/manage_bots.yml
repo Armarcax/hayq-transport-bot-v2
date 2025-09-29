@@ -24,5 +24,7 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Start bot
-        run: node index.js
+      - name: Start bot (debug mode)
+        run: |
+          echo "🚀 Starting HAYQ Bot..."
+          node index.js
