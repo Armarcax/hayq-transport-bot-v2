@@ -28,4 +28,4 @@ jobs:
         run: git pull origin main
 
       - name: Start bot
-        run: node index.js
+        run: node bot.js
