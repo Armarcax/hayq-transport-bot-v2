@@ -1,4 +1,4 @@
-name: Update HAYQ Bot
+name: Manage HAYQ Bot
 
 on:
   workflow_dispatch:
