@@ -25,4 +25,4 @@ jobs:
       - name: Start bot (debug mode)
         run: |
           echo "🚀 Starting HAYQ Bot..."
-          node bot.js
+          node bot/bot.js
