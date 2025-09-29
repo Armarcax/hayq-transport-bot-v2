@@ -3,10 +3,10 @@ name: Update HAYQ Bot
 on:
   push:
     branches:
-      - main        # բոլոր push-երը main branch-ում
-  workflow_dispatch: # ձեռքով trigger անելու հնարավորություն
+      - main
+  workflow_dispatch:
   schedule:
-    - cron: '*/10 * * * *' # ստուգում է նոր commit-երը 10 րոպե առ 10 րոպե
+    - cron: '*/10 * * * *'
 
 jobs:
   update-hayq-bot:
@@ -24,8 +24,5 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Pull latest changes
-        run: git pull origin main
-
       - name: Start bot
-        run: node bot.js
+        run: node index.js
