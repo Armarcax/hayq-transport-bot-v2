@@ -1,12 +1,9 @@
 name: Update HAYQ Bot
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '*/10 * * * *' # ստուգում է GitHub repo–ում նոր commit–երը 10 րոպեն մեկ
 
 jobs:
   update-hayq-bot:
@@ -22,9 +19,10 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm install
 
       - name: Start bot (debug mode)
         run: |
           echo "🚀 Starting HAYQ Bot..."
-          node index.js
+          node bot.js
