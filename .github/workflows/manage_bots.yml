@@ -1,9 +1,9 @@
-name: Manage HAYQ Bot
+name: Update HAYQ Bot
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/10 * * * *' # ստուգում է GitHub repo–ում նոր commit–երը 10 րոպեն մեկ
+    - cron: '*/10 * * * *' # ստուգում է GitHub repo–ում նոր commit–երը 10 րոպեը մեկ
 
 jobs:
   update-hayq-bot:
@@ -20,9 +20,18 @@ jobs:
 
       - name: Install dependencies
         run: |
+          cd hayq-transport-bot-v2
           npm install
 
-      - name: Start bot (debug mode)
+      - name: Start bot
         run: |
+          cd hayq-transport-bot-v2
           echo "🚀 Starting HAYQ Bot..."
-          node bot/bot.js
+          node bot/bot.js > bot.log 2>&1 &
+
+      - name: Upload bot logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: hayq-bot-logs
+          path: hayq-transport-bot-v2/bot.log
