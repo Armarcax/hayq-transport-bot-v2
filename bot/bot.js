@@ -3,14 +3,29 @@ const fs = require('fs');
 const path = require('path');
 const TelegramBot = require('node-telegram-bot-api');
 const chalk = require('chalk');
+const express = require('express');
 
 const botConfig = require('./config/botConfig');
 const mainMenu = require('./handlers/mainMenu');
 const routeMenu = require('./handlers/routeMenu');
 const helpHandler = require('./handlers/helpHandler');
 
-const bot = new TelegramBot(botConfig.token, { polling: true });
+const app = express();
 
+// --- Bot Initialization (WITHOUT polling) ---
+const bot = new TelegramBot(botConfig.token);
+
+// --- Webhook Setup ---
+const url = process.env.RENDER_EXTERNAL_URL || `https://hayqwaybot.onrender.com`;
+bot.setWebHook(`${url}/bot${botConfig.token}`);
+
+app.use(express.json());
+app.post(`/bot${botConfig.token}`, (req, res) => {
+  bot.processUpdate(req.body);
+  res.sendStatus(200);
+});
+
+// --- Assets ---
 const logoLarge = path.join(__dirname, 'images', 'hayq-logo-small.png');
 const logoMini = path.join(__dirname, 'images', 'hayq-logo-mini.png');
 
@@ -158,7 +173,7 @@ bot.on('location', msg => {
 
 // --- Տեքստային որոնում ---
 bot.on('message', msg => {
-  const { chat, text, from, location, reply_to_message } = msg;
+  const { chat, text, from } = msg;
   if (!text) return;
   const userId = from.id;
 
@@ -174,18 +189,13 @@ bot.on('message', msg => {
   }
 });
 
-log('HAYQ Way Bot is running...', LOG_LEVELS.INFO);
+log('✅ HAYQ Way Bot is running...', LOG_LEVELS.INFO);
 
-// --- Express server for Render ---
-const express = require('express');
-const app = express();
-
-const PORT = process.env.PORT || 3000;
-
+// --- Express server ---
+const PORT = process.env.PORT || 5000;
 app.get('/', (req, res) => {
-  res.send('✅ HAYQ Way Bot is running!');
+  res.send('✅ HAYQ Way Bot is running with Webhook!');
 });
-
 app.listen(PORT, () => {
   log(`Web server running on port ${PORT}`, LOG_LEVELS.INFO);
 });
