@@ -12,8 +12,8 @@ const helpHandler = require('./handlers/helpHandler');
 
 const app = express();
 
-// --- Bot Initialization (WITHOUT polling) ---
-const bot = new TelegramBot(botConfig.token);
+// --- Bot Initialization (SAFE MODE) ---
+const bot = new TelegramBot(botConfig.token, { polling: false });
 
 // --- Webhook Setup ---
 const url = process.env.RENDER_EXTERNAL_URL || `https://hayqwaybot.onrender.com`;
@@ -29,6 +29,7 @@ app.post(`/bot${botConfig.token}`, (req, res) => {
 const logoLarge = path.join(__dirname, 'images', 'hayq-logo-small.png');
 const logoMini = path.join(__dirname, 'images', 'hayq-logo-mini.png');
 
+// --- User state ---
 const userLocations = {};
 const LOG_LEVELS = { INFO: 'info', WARN: 'warn', ERROR: 'error' };
 let currentLogLevel = LOG_LEVELS.INFO;
